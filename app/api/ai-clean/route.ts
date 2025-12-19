@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ★ ここが今回のポイント：モックモードなら OpenAI を呼ばずに即返す
+    // ★ モックモードなら OpenAI を呼ばずに即返す
     if (USE_MOCK) {
       const result = mockAiClean({
         mode,

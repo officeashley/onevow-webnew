@@ -1,0 +1,122 @@
+[
+  {
+    "Date": "2025-01-01T09:00:00",
+    "AgentName": "Akari",
+    "CallsHandled": 25,
+    "AvgHandleTimeSeconds": 280,
+    "CSAT": 92,
+    "Adherence": 96,
+    "Compliance": 99,
+    "Call_Type": "Inbound",
+    "Issue_Type": "注文",
+    "Resolution_Status": "Resolved"
+  },
+  {
+    "Date": "2025-01-01T09:10:00",
+    "AgentName": "Akari",
+    "CallsHandled": 18,
+    "AvgHandleTimeSeconds": 310,
+    "CSAT": 78,
+    "Adherence": 93,
+    "Compliance": 98,
+    "Call_Type": "Inbound",
+    "Issue_Type": "請求",
+    "Resolution_Status": "Resolved"
+  },
+  {
+    "Date": "2025-01-01T09:20:00",
+    "AgentName": "Kenji",
+    "CallsHandled": 22,
+    "AvgHandleTimeSeconds": 260,
+    "CSAT": 88,
+    "Adherence": 95,
+    "Compliance": 97,
+    "Call_Type": "Inbound",
+    "Issue_Type": "技術",
+    "Resolution_Status": "Resolved"
+  },
+  {
+    "Date": "2025-01-01T09:30:00",
+    "AgentName": "Kenji",
+    "CallsHandled": 15,
+    "AvgHandleTimeSeconds": 340,
+    "CSAT": 72,
+    "Adherence": 91,
+    "Compliance": 96,
+    "Call_Type": "Outbound",
+    "Issue_Type": "フォロー",
+    "Resolution_Status": "Partially Resolved"
+  },
+  {
+    "Date": "2025-01-01T09:40:00",
+    "AgentName": "Mei",
+    "CallsHandled": 30,
+    "AvgHandleTimeSeconds": 240,
+    "CSAT": 95,
+    "Adherence": 98,
+    "Compliance": 99,
+    "Call_Type": "Inbound",
+    "Issue_Type": "注文",
+    "Resolution_Status": "Resolved"
+  },
+  {
+    "Date": "2025-01-01T09:50:00",
+    "AgentName": "Mei",
+    "CallsHandled": 20,
+    "AvgHandleTimeSeconds": 295,
+    "CSAT": 84,
+    "Adherence": 97,
+    "Compliance": 99,
+    "Call_Type": "Inbound",
+    "Issue_Type": "返品",
+    "Resolution_Status": "Resolved"
+  },
+  {
+    "Date": "2025-01-01T10:00:00",
+    "AgentName": "Taro",
+    "CallsHandled": 17,
+    "AvgHandleTimeSeconds": 360,
+    "CSAT": 69,
+    "Adherence": 90,
+    "Compliance": 95,
+    "Call_Type": "Inbound",
+    "Issue_Type": "クレーム",
+    "Resolution_Status": "Escalated"
+  },
+  {
+    "Date": "2025-01-01T10:10:00",
+    "AgentName": "Taro",
+    "CallsHandled": 19,
+    "AvgHandleTimeSeconds": 330,
+    "CSAT": 75,
+    "Adherence": 92,
+    "Compliance": 96,
+    "Call_Type": "Inbound",
+    "Issue_Type": "請求",
+    "Resolution_Status": "Resolved"
+  },
+  {
+    "Date": "2025-01-01T10:20:00",
+    "AgentName": "Yui",
+    "CallsHandled": 26,
+    "AvgHandleTimeSeconds": 250,
+    "CSAT": 90,
+    "Adherence": 97,
+    "Compliance": 99,
+    "Call_Type": "Inbound",
+    "Issue_Type": "注文",
+    "Resolution_Status": "Resolved"
+  },
+  {
+    "Date": "2025-01-01T10:30:00",
+    "AgentName": "Yui",
+    "CallsHandled": 21,
+    "AvgHandleTimeSeconds": 305,
+    "CSAT": 82,
+    "Adherence": 95,
+    "Compliance": 98,
+    "Call_Type": "Inbound",
+    "Issue_Type": "技術",
+    "Resolution_Status": "Resolved"
+  }
+]
