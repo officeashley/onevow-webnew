@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "next lint",
+    "smoke:day2": "tsx scripts/day2_smoke.ts",
+    "smoke:day3": "tsx scripts/day3_smoke.ts"
   },
   "dependencies": {
     "next": "^16.0.7",
@@ -24,6 +26,9 @@
     "eslint": "^9",
     "eslint-config-next": "16.0.7",
     "tailwindcss": "^4",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   },
   "ts-node": {

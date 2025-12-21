@@ -7,12 +7,14 @@ import DailyTrendChart from "@/app/dashboard/components/DailyTrendChart";
 
 import {
   CleanedRow,
-  computeOverview,
   buildAgentStats,
   calcAhtQuantiles,
   computeCsatBuckets,
   buildDailyKpis,
 } from "@/lib/kpiEngine";
+
+// ✅ Day2/Day3 summary（FCRはここから読む）
+import { computeSummary } from "@/lib/kpi/index";
 
 type RangeKey = "today" | "week" | "month";
 
@@ -51,8 +53,62 @@ export default function DashboardPage() {
   const allRows = mockRows as CleanedRow[];
   const rows = useMemo(() => filterRowsByRange(allRows, range), [allRows, range]);
 
-  const overview = useMemo(() => computeOverview(rows), [rows]);
+  // ✅ Overview（CSAT/AHT/FCR等）
+  const overview = useMemo(() => computeSummary(rows as any[]), [rows]);
+
+  // ✅ Agent Stats（CSAT/AHT + FCR列はここで計算済みに統一）
   const agentStats = useMemo(() => buildAgentStats(rows), [rows]);
+  /* ------------------------------
+     Agent別 FCR（Step4：page側で集計）
+     - Resolution_Status が無い/空 → unknown
+     - resolved / not resolved は eligible に入れる
+  -------------------------------- */
+  const agentFcrMap = useMemo(() => {
+    const norm = (v: any) =>
+      typeof v === "string" ? v.trim().toLowerCase() : "";
+
+    const m = new Map<string, { resolved: number; eligible: number; unknown: number }>();
+
+    for (const r of rows ?? []) {
+      const agent =
+        (r as any).Agent ??
+        (r as any).AgentName ??
+        (r as any).agentName ??
+        "Unknown";
+
+      const statusRaw =
+        (r as any).Resolution_Status ??
+        (r as any).resolution_status ??
+        (r as any).resolutionStatus ??
+        null;
+
+      const s = norm(statusRaw);
+
+      if (!m.has(agent)) m.set(agent, { resolved: 0, eligible: 0, unknown: 0 });
+      const obj = m.get(agent)!;
+
+      if (!s) {
+        obj.unknown++;
+        continue;
+      }
+
+      if (s === "resolved") {
+        obj.resolved++;
+        obj.eligible++;
+      } else {
+        // 文字列がある＝判定可能 → not resolved 扱い（v1）
+        obj.eligible++;
+      }
+    }
+
+    const out = new Map<string, { rate: number | null; unknown: number }>();
+    for (const [agent, v] of m.entries()) {
+      const rate =
+        v.eligible > 0 ? Math.round((v.resolved / v.eligible) * 1000) / 10 : null; // 小数1桁
+      out.set(agent, { rate, unknown: v.unknown });
+    }
+    return out;
+  }, [rows]);
 
   /* Top / Bottom AHT（今は人数少ないので 33%） */
   const { topAgentsByAht, bottomAgentsByAht } = useMemo(() => {
@@ -64,9 +120,32 @@ export default function DashboardPage() {
   /* 日次KPI（MVP） */
   const dailyKpis = useMemo(() => buildDailyKpis(rows), [rows]);
 
-  /* SLA 警告判定（MVP） */
-  const SLA_TARGET = 80;
-  const slaWarn = overview.serviceLevel !== null && overview.serviceLevel < SLA_TARGET;
+  // ✅ rowCount / totalCalls（必ず存在する形に寄せる）
+  const rowCount: number =
+    (overview as any).rowCount ??
+    (overview as any).totalRecords ??
+    (overview as any).recordCount ??
+    rows.length;
+
+  const totalCalls: number =
+    (overview as any).totalCalls ??
+    (overview as any).callCount ??
+    rowCount;
+
+  const avgCsat = (overview as any).avgCsat ?? null;
+  const avgAht = (overview as any).avgAht ?? null;
+
+  /* ------------------------------
+     FCR (Day3 v1): overview から読む
+     ※ computeSummary が fcrRate / eligible / unknown を返す前提
+  -------------------------------- */
+  const fcrRate = (overview as any).fcrRate ?? null; // number | null（%）
+  const fcrEligibleCount: number = (overview as any).fcrEligibleCount ?? 0;
+  const fcrUnknownCount: number = (overview as any).fcrUnknownCount ?? 0;
+
+  // warn 条件（MVP）
+  const unknownRatio = rowCount > 0 ? fcrUnknownCount / rowCount : 0;
+  const fcrWarn = (fcrRate !== null && fcrRate < 70) || unknownRatio > 0.2;
 
   return (
     <main className="min-h-screen bg-[#111111] text-slate-100 flex justify-center">
@@ -100,22 +179,26 @@ export default function DashboardPage() {
 
         {/* Overview */}
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-          <KpiCard label="総コール件数" value={overview.totalCalls} caption={`${overview.rowCount} records`} />
+          <KpiCard label="総コール件数" value={totalCalls} caption={`${rowCount} records`} />
+
           <KpiCard
             label="平均 CSAT"
-            value={overview.avgCsat !== null ? `${overview.avgCsat}%` : "-"}
+            value={avgCsat !== null ? `${avgCsat}%` : "-"}
             caption="target ≥ 85%"
           />
+
           <KpiCard
             label="平均 AHT"
-            value={overview.avgAht !== null ? `${overview.avgAht} sec` : "-"}
+            value={avgAht !== null ? `${avgAht} sec` : "-"}
             caption="目標 300 sec 以下"
           />
+
+          {/* ✅ Day3: FCR card */}
           <KpiCard
-            label="Service Level (MVP)"
-            value={overview.serviceLevel !== null ? `${overview.serviceLevel}%` : "-"}
-            caption={`target ≥ ${SLA_TARGET}%`}
-            status={slaWarn ? "warn" : "ok"}
+            label="FCR (v1)"
+            value={fcrRate !== null ? `${fcrRate}%` : "-"}
+            caption={`eligible ${fcrEligibleCount} / unknown ${fcrUnknownCount}`}
+            status={fcrWarn ? "warn" : "ok"}
           />
         </section>
 
@@ -131,7 +214,6 @@ export default function DashboardPage() {
           ) : (
             <div className="space-y-2">
               <DailyTrendChart data={dailyKpis} />
-
             </div>
           )}
         </section>
@@ -156,7 +238,7 @@ export default function DashboardPage() {
                     <div
                       className="h-1.5 rounded-full bg-emerald-500"
                       style={{
-                        width: overview.rowCount > 0 ? `${(b.count / overview.rowCount) * 100}%` : "0%",
+                        width: rowCount > 0 ? `${(b.count / rowCount) * 100}%` : "0%",
                       }}
                     />
                   </div>
@@ -179,7 +261,6 @@ export default function DashboardPage() {
                   className="flex justify-between rounded-lg bg-slate-900/60 px-2 py-1.5"
                 >
                   <div>
-                    {/* ✅ Step 7-2：ここを Link にする */}
                     <div className="font-semibold">
                       <Link
                         href={`/dashboard/agents/${encodeURIComponent(a.agentName)}`}
@@ -196,9 +277,23 @@ export default function DashboardPage() {
 
                   <div className="text-right">
                     <div className="font-mono">{a.avgAht !== null ? `${a.avgAht}s` : "-"}</div>
+
                     <div className="text-[10px] text-slate-400">
                       CSAT {a.avgCsat !== null ? `${a.avgCsat}%` : "-"}
                     </div>
+
+                    {/* ✅ Step4: FCR列（page側で agentFcrMap から読む） */}
+{(() => {
+  const f = agentFcrMap.get(a.agentName);
+  return (
+    <div className="text-[10px] text-slate-400">
+      FCR {f?.rate !== null && f?.rate !== undefined ? `${f.rate}%` : "-"}
+      {f?.unknown ? (
+        <span className="ml-1 text-slate-500">(unk {f.unknown})</span>
+      ) : null}
+    </div>
+  );
+})()}
                   </div>
                 </div>
               ))}
@@ -219,7 +314,6 @@ export default function DashboardPage() {
                     key={a.agentName}
                     className="rounded bg-slate-900/70 px-2 py-1 flex justify-between"
                   >
-                    {/* ✅ ここも Link（任意だけど統一すると気持ちいい） */}
                     <Link
                       href={`/dashboard/agents/${encodeURIComponent(a.agentName)}`}
                       className="hover:underline"
@@ -238,7 +332,6 @@ export default function DashboardPage() {
                     key={a.agentName}
                     className="rounded bg-slate-900/70 px-2 py-1 flex justify-between"
                   >
-                    {/* ✅ ここも Link */}
                     <Link
                       href={`/dashboard/agents/${encodeURIComponent(a.agentName)}`}
                       className="hover:underline"
@@ -254,7 +347,11 @@ export default function DashboardPage() {
 
           <div className="rounded-2xl bg-[#1E1E1E] border border-slate-700/70 p-4">
             <h2 className="text-sm font-semibold mb-3">Insights</h2>
-            <InsightPill active={range === "today"} label="Today" body="Today は現在の抽出期間をそのまま表示しています。" />
+            <InsightPill
+              active={range === "today"}
+              label="Today"
+              body="Today は現在の抽出期間をそのまま表示しています。"
+            />
             <InsightPill active={range === "week"} label="This Week" body="直近7日間の傾向を表示。" />
             <InsightPill active={range === "month"} label="This Month" body="直近30日間の傾向を表示。" />
           </div>
