@@ -8,7 +8,11 @@
     "start": "next start",
     "lint": "next lint",
     "smoke:day2": "tsx scripts/day2_smoke.ts",
-    "smoke:day3": "tsx scripts/day3_smoke.ts"
+    "smoke:day3": "tsx scripts/day3_smoke.ts",
+    "smoke:day4": "tsx scripts/day4_smoke.ts",
+"smoke:day5": "tsx scripts/day5_smoke.ts",
+"smoke:day6": "tsx scripts/day6_smoke.ts"
+
   },
   "dependencies": {
     "next": "^16.0.7",

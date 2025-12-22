@@ -1,48 +1,42 @@
-export type CleanedRow = Record<string, any>;
+// lib/kpi/types.ts
+export type InsightLevel = "info" | "warn" | "critical";
+export type OwnerType = "center" | "supervisor" | "agent";
+export type RangeKey = "today" | "week" | "month";
 
-export type CsatBuckets = {
-  "90-100": number;
-  "80-89": number;
-  "0-79": number;
-  unknown: number;
+export type MetricKey =
+  | "AHT"
+  | "CSAT"
+  | "FCR"
+  | "ESCALATION"
+  | "SLA"
+  | "UNKNOWN_FCR";
+
+export type InsightV1 = {
+  id: string;
+  level: InsightLevel;
+  title: string;
+  why: string; // 根拠（人が読める文章）
+  impact?: string; // 影響
+  scope: "center" | "agent" | "team";
+  who: "center" | string; // agentName or "center"
+  window: RangeKey;
+  metrics?: Partial<Record<MetricKey, number | string | null>>;
 };
 
-export type CsatResult = {
-  avgCsat: number | null;
-  countRated: number;   // 数値CSATとして評価対象になった件数
-  countTotal: number;   // rows.length
-  buckets: CsatBuckets;
-  nullRate: number;     // (countTotal - countRated) / countTotal
-  flags: string[];      // 例: ["CSAT_MANY_NULLS"]
+export type RecommendTaskV1 = {
+  id: string;
+  priority: "P0" | "P1" | "P2";
+  ownerType: OwnerType;
+  owner: "center" | string; // agentName or "center"
+  within: "24h" | "3d" | "7d" | "14d";
+  duration: "15m" | "30m" | "60m" | "2h" | "1w";
+  task: string; // やること（命令形）
+  howMany?: number; // 例：レビュー件数
+  evidence?: string; // なぜ？（短文）
 };
 
-export type AhtResult = {
-  avgAht: number | null;
-  medianAht: number | null;
-  p90Aht: number | null;
-  countValid: number;
-  countTotal: number;
-  nullRate: number;
-  flags: string[];      // 例: ["AHT_MANY_NULLS"]
-};
-
-export type AgentKpis = {
-  agentName: string;
-  csat: CsatResult;
-  aht: AhtResult;
-  // Day3以降で FCR/SLA/Esc 追加していく
-};
-
-export type KpiSummary = {
-  rowCount: number;
-  avgCsat: number | null;
-  avgAht: number | null;
-  csatBuckets: CsatBuckets;
-};
-
-export type DailyKpi = {
-  date: string; // ISO yyyy-mm-dd
-  avgCsat: number | null;
-  avgAht: number | null;
-  count: number;
+export type AiOutputV1 = {
+  problems: string[]; // 重要な問題の見出し（短文）
+  insights: InsightV1[];
+  recommendTasks: RecommendTaskV1[];
 };
