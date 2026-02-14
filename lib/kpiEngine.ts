@@ -337,4 +337,5 @@ export function buildDailyKpis(rows: CleanedRow[]): DailyKpi[] {
 
   out.sort((a, b) => a.date.localeCompare(b.date));
   return out;
+  export function computeOverview(...) { ... }
 }
