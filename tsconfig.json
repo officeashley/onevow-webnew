@@ -33,5 +33,9 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "_disabled_pages",
+    "**/*.full.tsx",
+    "**/*.full.ts"
+  ]
 }

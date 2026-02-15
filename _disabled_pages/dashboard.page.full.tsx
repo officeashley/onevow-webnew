@@ -7,8 +7,9 @@ import Link from "next/link";
 import mockRows from "@/data/xentrix_kpi_mock_260.json";
 import DailyTrendChart from "@/app/dashboard/components/DailyTrendChart";
 
+import type { CleanedRow } from "@/lib/kpi/types";
+
 import {
-  CleanedRow,
   buildAgentStats,
   calcAhtQuantiles,
   calcCsatQuantiles,
@@ -16,6 +17,7 @@ import {
   computeCsatBuckets,
   buildDailyKpis,
 } from "@/lib/kpiEngine";
+
 
 import { computeSummary } from "@/lib/kpi"; // index.ts から re-export
 import { buildInsightsV1 } from "@/lib/kpi/insightsV1";
@@ -315,8 +317,9 @@ export default function DashboardPage() {
     const ratio = 0.1;
     const minSample = 30;
     const minItems = 2;
-    calcCsatQuantiles(agentStats, ratio, minSample, minItems);
-    calcFcrQuantiles(agentStats, ratio, minSample, minItems);
+    calcCsatQuantiles(agentStats, ratio, minSample);
+calcFcrQuantiles(agentStats, ratio, minSample);
+
     return { ratio, minSample, minItems };
   }, [agentStats]);
 

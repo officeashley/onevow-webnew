@@ -1,21 +1,15 @@
 import Link from "next/link";
 import mockRows from "@/data/xentrix_kpi_mock_260.json";
-import { CleanedRow, buildDailyKpis } from "@/lib/kpiEngine";
+import type { CleanedRow } from "@/lib/kpi/types";
+import { computeOverview, buildDailyKpis } from "@/lib/kpiEngine";
 
-type Overview = {
-  rowCount: number;
-  avgCsat: number | null;
-  avgAht: number | null;
-};
 
-export default async function AgentPage({
+export default function AgentPage({
   params,
 }: {
-  // Next.js 16: params は Promise 扱い（sync access は将来廃止）
-  params: Promise<{ agentName: string }>;
+  params: { agentName: string };
 }) {
-  const { agentName: raw } = await params;
-  const agentName = decodeURIComponent(raw);
+  const agentName = decodeURIComponent(params.agentName);
 
   const allRows = mockRows as CleanedRow[];
   const rows = allRows.filter((r) => r.AgentName === agentName);
@@ -43,10 +37,7 @@ export default async function AgentPage({
     );
   }
 
-  // ✅ computeOverview を使わず、このページ内で安全に集計（ビルド確実に通す）
-  const overview: Overview = computeOverviewLocal(rows);
-
-  const recordCount = overview.rowCount;
+  const overview = computeOverview(rows);
   const daily = buildDailyKpis(rows);
 
   return (
@@ -70,7 +61,7 @@ export default async function AgentPage({
 
         {/* Overview cards */}
         <section className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-          <Card label="Records" value={recordCount} />
+          <Card label="Records" value={overview.rowCount} />
           <Card
             label="Avg CSAT"
             value={overview.avgCsat !== null ? `${overview.avgCsat}%` : "-"}
@@ -92,7 +83,7 @@ export default async function AgentPage({
             <p className="text-[11px] text-slate-400">No daily data</p>
           ) : (
             <div className="space-y-2">
-              {daily.map((d: any) => (
+              {daily.map((d) => (
                 <div
                   key={d.date}
                   className="rounded-lg bg-slate-900/40 border border-slate-800 px-3 py-2 flex items-center justify-between text-[11px]"
@@ -102,17 +93,13 @@ export default async function AgentPage({
                     <div className="text-slate-300">
                       CSAT:{" "}
                       <span className="font-mono text-emerald-400">
-                        {d.avgCsat !== null && d.avgCsat !== undefined
-                          ? `${d.avgCsat}%`
-                          : "-"}
+                        {d.avgCsat !== null ? `${d.avgCsat}%` : "-"}
                       </span>
                     </div>
                     <div className="text-slate-300">
                       AHT:{" "}
                       <span className="font-mono text-sky-300">
-                        {d.avgAht !== null && d.avgAht !== undefined
-                          ? `${d.avgAht}s`
-                          : "-"}
+                        {d.avgAht !== null ? `${d.avgAht}s` : "-"}
                       </span>
                     </div>
                   </div>
@@ -124,32 +111,6 @@ export default async function AgentPage({
       </div>
     </main>
   );
-}
-
-// ✅ “rowCount / avgCsat / avgAht” をこのページで計算（型が揺れても落ちない）
-function computeOverviewLocal(rows: any[]): Overview {
-  const rowCount = rows.length;
-
-  // csat 候補キー（データの列名が揺れても拾う）
-  const csatVals = rows
-    .map((r) => r.CSAT ?? r.csat ?? r.Csat ?? r.CustomerSatisfaction ?? null)
-    .filter((v) => typeof v === "number" && !Number.isNaN(v)) as number[];
-
-  // aht 候補キー
-  const ahtVals = rows
-    .map((r) => r.AHT ?? r.aht ?? r.Aht ?? r.AverageHandleTime ?? null)
-    .filter((v) => typeof v === "number" && !Number.isNaN(v)) as number[];
-
-  const avg = (arr: number[]) =>
-    arr.length === 0
-      ? null
-      : Math.round((arr.reduce((a, b) => a + b, 0) / arr.length) * 10) / 10;
-
-  return {
-    rowCount,
-    avgCsat: avg(csatVals),
-    avgAht: avg(ahtVals),
-  };
 }
 
 function Card(props: { label: string; value: string | number }) {
